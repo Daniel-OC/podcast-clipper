@@ -6,8 +6,8 @@ import(
 	"github.com/daniel-oc/podcast-clipper/pkg/errors"
 )
 
-func ValidateApplePodcastURL(url string) error {
-	parsedURL, err := url.Parse(url)
+func validateApplePodcastURL(urlString string) error {
+	parsedURL, err := url.Parse(urlString)
 	if err != nil {
 		return errors.NewInvalidURLError("failed to parse url")
 	}
