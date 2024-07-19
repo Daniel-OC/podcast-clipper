@@ -3,7 +3,10 @@ package download
 import(
 	"net/url"
 	"strings"
+
 	"github.com/daniel-oc/podcast-clipper/pkg/errors"
+
+	"github.com/gocolly/colly/v2"
 )
 
 func GetPodcastDetails(urlString string) (podcastName string, episodeName string, err error) {
@@ -48,6 +51,20 @@ func GetEpisodeName(urlString string) (episodeName string, err error) {
 
 func GetPodcastName(url string) (podcastName string, err error) {
 	// Scraping occurs here to get the podcast name after visiting the apple URL
-	return "", nil
+	c := colly.NewCollector(
+		colly.AllowedDomains("apple.com"),
+	)
+
+	c.OnHTML(".product-header__identity podcast-header__identity", func(element *colly.HTMLElement) {
+		podcastName = element.ChildText("a")
+	}) 
+
+	c.Visit(url)
+
+	if podcastName == "" {
+		return "", errors.NewScrapingError("No podcast name found")
+	}
+
+	return podcastName, nil
 }
 
