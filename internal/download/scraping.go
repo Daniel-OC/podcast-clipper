@@ -43,7 +43,7 @@ func GetEpisodeName(urlString string) (episodeName string, err error) {
 		return "", errors.NewCustomError(400, "empty_name", "Episode Name is empty")
 	}
 	
-	return episodeName, err
+	return episodeName, nil
 }
 
 func GetPodcastName(url string) (podcastName string, err error) {
