@@ -71,3 +71,9 @@ func GetPodcastName(url string) (podcastName string, err error) {
 
 	return podcastName, nil
 }
+
+func ConstructPodcastIndexURL(podcastName string) (URL string) {
+	encodedPodcastName := url.QueryEscape(podcastName)
+	URL = fmt.Sprintf("https://podcastindex.org/search?q=%s&type=all", encodedPodcastName)
+	return URL
+}
