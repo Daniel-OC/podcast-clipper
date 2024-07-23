@@ -1,13 +1,15 @@
 package download
 
-import(
+import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strings"
-	"net/http"
-  "io/ioutil"
-	
+
 	"github.com/daniel-oc/podcast-clipper/pkg/errors"
+	"github.com/daniel-oc/podcast-clipper/pkg/models"
 
 	"github.com/gocolly/colly/v2"
 )
@@ -106,7 +108,7 @@ func GetPodcastName(url string) (podcastName string, err error) {
 // 	return "", fmt.Errorf("no podcast found with name: %s", podcastName)
 // }
 
-func SearchITunes(podcastName string) {
+func SearchITunes(podcastName string) (apiResponse *models.FullPodcastResultResponse, err error) {
     baseURL := "https://itunes.apple.com/search"
     params := url.Values{}
     params.Add("term", podcastName)
@@ -117,15 +119,33 @@ func SearchITunes(podcastName string) {
     resp, err := http.Get(fullURL)
     if err != nil {
         fmt.Println("Error making request:", err)
-        return
+        return nil, err
     }
     defer resp.Body.Close()
 
-    body, err := ioutil.ReadAll(resp.Body)
+    body, err := io.ReadAll(resp.Body)
     if err != nil {
         fmt.Println("Error reading response:", err)
-        return
+        return nil, err
     }
 
-    fmt.Println(string(body))
+    json.Unmarshal(body, apiResponse)
+		if apiResponse.ResultCount > 0 {
+			return apiResponse, nil
+		} else {
+			return nil, fmt.Errorf("no results from itunes for given podcast name")
+		}
+}
+
+func GrabRSSFeed(itunesResponse *models.FullPodcastResultResponse, podcastName string) (rssFeed string, err error) {
+	for _, response := range itunesResponse.Results {
+		if response.CollectionName == podcastName {
+			rssFeed = response.FeedURL
+		}
+	}
+	if rssFeed == "" {
+		return "", fmt.Errorf("no rssFeed on the given podcast title")
+	}
+
+	return rssFeed, nil
 }
